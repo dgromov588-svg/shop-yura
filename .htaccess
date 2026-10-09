@@ -1,0 +1,93 @@
+# ============================================
+#  Скупка антикваріату · Дніпро
+#  Автоматична конфігурація Apache-хостингу
+# ============================================
+
+# ---------- Кодування ----------
+AddDefaultCharset UTF-8
+
+# ---------- Стартова сторінка ----------
+DirectoryIndex index.html
+
+# ---------- SPA-роутинг (хеш-навігація + прямі посилання) ----------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Не переписувати реальні файли та каталоги
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Усі інші запити -> index.html
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# ---------- Кастомна 404 ----------
+ErrorDocument 404 /index.html
+
+# ---------- Gzip-стиснення ----------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+  AddOutputFilterByType DEFLATE application/javascript application/json
+  AddOutputFilterByType DEFLATE application/xml application/rss+xml
+  AddOutputFilterByType DEFLATE image/svg+xml font/woff font/woff2
+</IfModule>
+
+# ---------- Кешування в браузері ----------
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # HTML завжди свіжий (щоб оновлення застосовувались одразу)
+  ExpiresByType text/html "access plus 0 seconds"
+
+  # Зображення — довгий кеш
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType image/x-icon "access plus 1 year"
+
+  # Шрифти та маніфест
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType application/manifest+json "access plus 1 week"
+  ExpiresByType text/css "access plus 1 week"
+  ExpiresByType application/javascript "access plus 1 week"
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Заголовки безпеки
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+
+  # Захист адмін-панелі від індексації
+  <FilesMatch "\.(html)$">
+    Header set X-Robots-Tag "index, follow"
+  </FilesMatch>
+
+  # Коректна робота кешу при оновленні
+  Header set Cache-Control "no-cache, must-revalidate" "expr=%{CONTENT_TYPE} =~ m#text/html#"
+</IfModule>
+
+# ---------- Стиснення зображень на стороні сервера (якщо доступний Brotli) ----------
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css application/javascript
+</IfModule>
+
+# ---------- Заборона доступу до службових файлів ----------
+<FilesMatch "^(\.htaccess|\.htpasswd|.*\.log|.*\.md)$">
+  Require all denied
+</FilesMatch>
+
+# ---------- PHP заборонено, крім приймача оновлень ----------
+<FilesMatch "^(?!(deploy-hook|api)\.php$).*\.php$">
+  Require all denied
+</FilesMatch>
+<FilesMatch "^(deploy-hook|api)\.php$">
+  Header set X-Robots-Tag "noindex, nofollow"
+</FilesMatch>
+
+# ---------- Дані адмінки (якщо збереглися в папці сайту) ----------
+RedirectMatch 403 ^/\.antikvar-data/

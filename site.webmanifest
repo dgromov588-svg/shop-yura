@@ -1,0 +1,42 @@
+{
+  "name": "Скупка антикваріату в Дніпрі — Юрій",
+  "short_name": "Антикваріат Дніпро",
+  "description": "Справедлива оцінка та скупка антикваріату. Картини, ікони, монети, прикраси, меблі. Дніпро, вул. 20-річчя Перемоги, 35",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#2b140e",
+  "theme_color": "#2b140e",
+  "lang": "uk",
+  "dir": "ltr",
+  "categories": ["business", "shopping"],
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Залишити заявку",
+      "short_name": "Заявка",
+      "description": "Надіслати предмет на оцінку",
+      "url": "./#contact"
+    }
+  ]
+}
