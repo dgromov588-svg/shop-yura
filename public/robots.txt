@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /deploy-hook.php
+Disallow: /api.php
+
+Host: https://antikvardp.net
+Sitemap: https://antikvardp.net/sitemap.xml

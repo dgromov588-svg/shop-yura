@@ -1,0 +1,112 @@
+name: 📱 Заливка на CityHost
+
+# Запуск:
+#   • автоматично — після кожної зміни в гілці main/master (у т.ч. з телефону на github.com)
+#   • вручну — Actions → «📱 Заливка на CityHost» → Run workflow (є в мобільному застосунку GitHub)
+#   • з адмінки сайту — Налаштування → «Заливка з телефону» → кнопка «Залити зараз»
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: cityhost-deploy
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Збірка
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # щоб записати збірку в гілку build
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Залежності
+        run: npm ci || npm install
+
+      - name: Збірка сайту
+        run: npm run build
+
+      - name: Підготовка до хостингу
+        env:
+          DEPLOY_HOOK_SECRET: ${{ secrets.DEPLOY_HOOK_SECRET }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: |
+          if [ -n "$SITE_URL" ]; then
+            node scripts/prepare-deploy.mjs --no-zip --url="$SITE_URL"
+          else
+            node scripts/prepare-deploy.mjs --no-zip
+          fi
+
+      - name: Архів для ручного завантаження (перший раз)
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-for-hosting
+          path: dist
+          include-hidden-files: true
+          retention-days: 14
+
+      - name: Публікація збірки в гілку build
+        run: |
+          cd dist
+          git init -q -b build
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "build ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" build
+          echo "✓ Збірку опубліковано в гілку build"
+
+  deploy:
+    name: Оновлення сайту на хостингу
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read    # токен, що передається хостингу, — ЛИШЕ на читання
+    steps:
+      - name: Команда хостингу оновитися
+        env:
+          HOOK_SECRET: ${{ secrets.DEPLOY_HOOK_SECRET }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "$HOOK_SECRET" ] || [ -z "$SITE_URL" ]; then
+            echo "::notice title=Збірка готова::Готова збірка лежить у гілці build. Оновіть сайт з Termius командою: bash ~/antikvar.sh  (автоматичне оновлення вмикається секретом DEPLOY_HOOK_SECRET і змінною SITE_URL)."
+            echo "### ✅ Збірка готова — оновіть сайт у Termius: \`bash ~/antikvar.sh\`" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          SITE_URL="${SITE_URL%/}"
+          RESP=$(curl -sS -w '\n%{http_code}' --max-time 300 -X POST "$SITE_URL/deploy-hook.php" \
+            -H "X-Deploy-Token: $HOOK_SECRET" \
+            --data-urlencode "repo=$GITHUB_REPOSITORY" \
+            --data-urlencode "ref=build" \
+            --data-urlencode "github_token=$GH_TOKEN") || true
+          CODE=$(printf '%s' "$RESP" | tail -n1)
+          BODY=$(printf '%s' "$RESP" | sed '$d')
+          echo "HTTP $CODE"
+          echo "$BODY"
+          case "$CODE" in
+            200) echo "### ✅ Сайт оновлено: $SITE_URL" >> "$GITHUB_STEP_SUMMARY" ;;
+            404)
+              echo "::error title=Перша заливка вручну::На хостингу ще немає deploy-hook.php. Один раз завантажте архів site-for-hosting (внизу цієї сторінки) у папку сайту через файловий менеджер CityHost і розпакуйте. Далі все буде автоматично."
+              exit 1 ;;
+            403) echo "::error title=Невірний секрет::DEPLOY_HOOK_SECRET на GitHub не збігається з тим, що на сайті. Залийте сайт вручну ще раз (архів site-for-hosting)."; exit 1 ;;
+            *) echo "::error title=Помилка оновлення::HTTP $CODE — дивіться відповідь вище"; exit 1 ;;
+          esac
+
+      - name: Перевірка сайту
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          HOOK_SECRET: ${{ secrets.DEPLOY_HOOK_SECRET }}
+        run: |
+          [ -n "$SITE_URL" ] && [ -n "$HOOK_SECRET" ] || exit 0
+          sleep 3
+          curl -fsS "${SITE_URL%/}/?v=$GITHUB_RUN_ID" | grep -q "АнтикварЪ" \
+            && echo "✓ ${SITE_URL} відкривається" \
+            || { echo "::warning::Сайт не відповідає очікуваним вмістом — перевірте вручну"; }
