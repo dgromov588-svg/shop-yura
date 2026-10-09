@@ -1,0 +1,55 @@
+# Залежності
+node_modules/
+.pnp
+.pnp.js
+
+# Збірка
+dist/
+dist-ssr/
+build/
+*.local
+
+# Деплой
+.env.deploy
+backups/
+ДЛЯ-NETCATTY/
+antikvar-site.tgz
+antikvar-deploy.tgz
+deploy.zip
+deploy.tar.gz
+*.rsync-*
+
+# Логи
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+*.log
+
+# Редактори
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ОС
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Кеш
+.cache/
+.vite/
+.eslintcache
+*.tsbuildinfo

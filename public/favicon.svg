@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="w" cx="42%" cy="38%" r="70%">
+      <stop offset="0%" stop-color="#93432a"/>
+      <stop offset="50%" stop-color="#642814"/>
+      <stop offset="100%" stop-color="#36140a"/>
+    </radialGradient>
+    <linearGradient id="r" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%" stop-color="#7e3a22"/>
+      <stop offset="100%" stop-color="#35130a"/>
+    </linearGradient>
+    <linearGradient id="b" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8e8aa"/>
+      <stop offset="36%" stop-color="#dcbb62"/>
+      <stop offset="62%" stop-color="#a6812e"/>
+      <stop offset="100%" stop-color="#ebcf7b"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="97" fill="url(#r)" stroke="#1c0804" stroke-width="3"/>
+  <circle cx="100" cy="100" r="80" fill="none" stroke="#230a04" stroke-width="5" stroke-dasharray="6 7"/>
+  <circle cx="100" cy="100" r="69" fill="#230a04"/>
+  <circle cx="100" cy="100" r="66" fill="url(#w)"/>
+  <text x="100" y="126" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif"
+        font-weight="700" font-size="72" letter-spacing="-4" fill="url(#b)" stroke="#4a3210" stroke-width="1">ЮК</text>
+</svg>
